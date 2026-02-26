@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CRUD JSON WebService</title>
+    <style>
+        body { font-family: Arial; margin: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .form-group { margin-bottom: 10px; }
+        input, textarea { padding: 5px; width: 300px; }
+        button { padding: 8px 15px; margin-right: 5px; }
+        #result { margin-top: 20px; padding: 10px; border: 1px solid #ccc; }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .actions button { margin-right: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>CRUD con JSON WebService</h2>
+        
+        <div class="form-group">
+            <label>Formato richiesta:</label>
+            <select id="requestFormat">
+                <option value="json">JSON</option>
+                <option value="xml">XML</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label>Formato risposta:</label>
+            <select id="responseFormat">
+                <option value="json">JSON</option>
+                <option value="xml">XML</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label>ID (per GET/PUT/DELETE):</label>
+            <input type="number" id="itemId" placeholder="ID elemento">
+        </div>
+        
+        <div class="form-group">
+            <label>Dati (JSON o XML):</label><br>
+            <textarea id="dataInput" rows="5" cols="50">{"nome":"Mario","cognome":"Rossi","eta":30}</textarea>
+        </div>
+        
+        <div>
+            <button onclick="sendRequest('GET')">GET (tutti)</button>
+            <button onclick="sendRequest('GET', true)">GET (singolo)</button>
+            <button onclick="sendRequest('POST')">POST (crea)</button>
+            <button onclick="sendRequest('PUT')">PUT (aggiorna)</button>
+            <button onclick="sendRequest('DELETE')">DELETE</button>
+            <button onclick="loadAll()">Carica lista</button>
+        </div>
+        
+        <div id="result"></div>
+        
+        <div id="itemsList"></div>
+    </div>
+
+    <script>
+    function sendRequest(method, useId = false) {
+        const requestFormat = document.getElementById('requestFormat').value;
+        const responseFormat = document.getElementById('responseFormat').value;
+        const id = document.getElementById('itemId').value;
+        const dataInput = document.getElementById('dataInput').value;
+        
+        let url = 'index.php';
+        if (useId && id) {
+            url += '/' + id;
+        } else if (method === 'PUT' || method === 'DELETE') {
+            url += '/' + id;
+        }
+        
+        const xhr = new XMLHttpRequest();
+        xhr.open(method, url, true);
+        
+        // Set headers
+        xhr.setRequestHeader('Content-Type', 'application/' + requestFormat);
+        xhr.setRequestHeader('Accept', 'application/' + responseFormat);
+        
+        xhr.onload = function() {
+            let result = '';
+            
+            // Formatta il risultato in base al formato di risposta
+            if (responseFormat === 'json') {
+                try {
+                    const data = JSON.parse(this.responseText);
+                    result = JSON.stringify(data, null, 2);
+                } catch(e) {
+                    result = this.responseText;
+                }
+            } else {
+                // Per XML, mostriamo direttamente
+                result = this.responseText;
+            }
+            
+            document.getElementById('result').innerHTML = 
+                `<h3>Risposta (${method}):</h3>
+                 <pre>${result}</pre>`;
+            
+            if (method === 'GET') {
+                loadAll(); // Ricarica la lista dopo GET
+            }
+        };
+        
+        // Per GET e DELETE non inviamo body
+        if (method === 'POST' || method === 'PUT') {
+            xhr.send(dataInput);
+        } else {
+            xhr.send();
+        }
+    }
+    
+    function loadAll() {
+        const responseFormat = document.getElementById('responseFormat').value;
+        
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', 'index.php', true);
+        xhr.setRequestHeader('Accept', 'application/' + responseFormat);
+        
+        xhr.onload = function() {
+            let items = [];
+            
+            if (responseFormat === 'json') {
+                try {
+                    items = JSON.parse(this.responseText);
+                } catch(e) {
+                    console.error('Errore parsing JSON');
+                }
+            } else {
+                // Per semplicità, mostriamo XML raw
+                document.getElementById('itemsList').innerHTML = 
+                    '<h3>Lista elementi (XML):</h3><pre>' + this.responseText + '</pre>';
+                return;
+            }
+            
+            if (items.length === 0) {
+                document.getElementById('itemsList').innerHTML = '<p>Nessun elemento trovato</p>';
+                return;
+            }
+            
+            let html = '<h3>Lista elementi:</h3><table><tr>';
+            
+            // Crea intestazioni tabella
+            const headers = Object.keys(items[0]);
+            headers.forEach(header => {
+                html += `<th>${header}</th>`;
+            });
+            html += '<th>Azioni</th></tr>';
+            
+            // Crea righe tabella
+            items.forEach(item => {
+                html += '<tr>';
+                headers.forEach(header => {
+                    html += `<td>${item[header]}</td>`;
+                });
+                html += `<td class="actions">
+                    <button onclick="editItem(${item.id})">Modifica</button>
+                    <button onclick="deleteItem(${item.id})">Elimina</button>
+                </td></tr>`;
+            });
+            
+            html += '</table>';
+            document.getElementById('itemsList').innerHTML = html;
+        };
+        
+        xhr.send();
+    }
+    
+    function editItem(id) {
+        document.getElementById('itemId').value = id;
+        
+        // Carica i dati dell'elemento
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', 'index.php/' + id, true);
+        xhr.setRequestHeader('Accept', 'application/json');
+        
+        xhr.onload = function() {
+            try {
+                const item = JSON.parse(this.responseText);
+                // Prepara i dati per la modifica (rimuovi id)
+                delete item.id;
+                document.getElementById('dataInput').value = JSON.stringify(item, null, 2);
+            } catch(e) {
+                console.error('Errore nel caricamento dell\'elemento');
+            }
+        };
+        
+        xhr.send();
+    }
+    
+    function deleteItem(id) {
+        if (confirm('Sei sicuro di voler eliminare questo elemento?')) {
+            document.getElementById('itemId').value = id;
+            sendRequest('DELETE');
+        }
+    }
+    
+    // Carica la lista all'avvio
+    loadAll();
+    </script>
+</body>
+</html>
