@@ -1,205 +1,609 @@
 <!DOCTYPE html>
-<html>
+<html lang="it">
 <head>
-    <title>CRUD JSON WebService</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Client RESTful</title>
     <style>
-        body { font-family: Arial; margin: 20px; }
-        .container { max-width: 800px; margin: 0 auto; }
-        .form-group { margin-bottom: 10px; }
-        input, textarea { padding: 5px; width: 300px; }
-        button { padding: 8px 15px; margin-right: 5px; }
-        #result { margin-top: 20px; padding: 10px; border: 1px solid #ccc; }
-        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background-color: #f2f2f2; }
-        .actions button { margin-right: 5px; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            margin-bottom: 1rem;
+        }
+        
+        .endpoint-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            display: inline-block;
+            font-family: monospace;
+            font-size: 1.1rem;
+        }
+        
+        .panel {
+            background: white;
+            border-radius: 10px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .panel h2 {
+            color: #333;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 0.5rem;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #555;
+            font-weight: 500;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        textarea {
+            font-family: monospace;
+            resize: vertical;
+        }
+        
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .btn {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+        }
+        
+        .btn-success {
+            background: #48bb78;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+        }
+        
+        .btn-warning {
+            background: #ed8936;
+            color: white;
+        }
+        
+        .btn-warning:hover {
+            background: #dd6b20;
+            transform: translateY(-2px);
+        }
+        
+        .btn-danger {
+            background: #f56565;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #e53e3e;
+            transform: translateY(-2px);
+        }
+        
+        .btn-info {
+            background: #4299e1;
+            color: white;
+        }
+        
+        .btn-info:hover {
+            background: #3182ce;
+            transform: translateY(-2px);
+        }
+        
+        .table-container {
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        
+        th {
+            background: #667eea;
+            color: white;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        tr:hover {
+            background: #f7fafc;
+        }
+        
+        .badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 3px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        
+        .badge-success {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+        
+        .badge-danger {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+        
+        .action-btns {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .action-btns button {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.875rem;
+        }
+        
+        #response {
+            background: #2d3748;
+            color: #a0aec0;
+            padding: 1rem;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .status-code {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 3px;
+            font-weight: 600;
+            margin-left: 1rem;
+        }
+        
+        .status-2xx {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+        
+        .status-4xx {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+        
+        .status-5xx {
+            background: #feebc8;
+            color: #744210;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0,0,0,.1);
+            border-radius: 50%;
+            border-top-color: #667eea;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .hidden {
+            display: none;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>CRUD con JSON WebService</h2>
+        <header>
+            <h1>🌐 Client RESTful</h1>
+            <p>Endpoint: <span class="endpoint-badge">/api/users</span></p>
+        </header>
         
-        <div class="form-group">
-            <label>Formato richiesta:</label>
-            <select id="requestFormat">
-                <option value="json">JSON</option>
-                <option value="xml">XML</option>
-            </select>
+        <div class="panel">
+            <h2>📝 Controlli Richiesta</h2>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Metodo HTTP</label>
+                    <select id="method">
+                        <option value="GET">GET - Ottieni risorse</option>
+                        <option value="GET_ONE">GET (con ID) - Ottieni risorsa specifica</option>
+                        <option value="POST">POST - Crea nuova risorsa</option>
+                        <option value="PUT">PUT - Aggiorna risorsa (completo)</option>
+                        <option value="PATCH">PATCH - Aggiorna risorsa (parziale)</option>
+                        <option value="DELETE">DELETE - Elimina risorsa</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>ID Risorsa (per GET/ PUT/ PATCH/ DELETE)</label>
+                    <input type="number" id="resourceId" placeholder="es. 1">
+                </div>
+                
+                <div class="form-group">
+                    <label>Formato Richiesta</label>
+                    <select id="requestFormat">
+                        <option value="application/json">JSON</option>
+                        <option value="application/xml">XML</option>
+                        <option value="application/x-www-form-urlencoded">Form URL Encoded</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Formato Risposta</label>
+                    <select id="responseFormat">
+                        <option value="application/json">JSON</option>
+                        <option value="application/xml">XML</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Dati Richiesta (per POST/ PUT/ PATCH)</label>
+                <textarea id="requestData" rows="6" placeholder='{
+    "nome": "Mario Rossi",
+    "email": "mario@example.com",
+    "eta": 30,
+    "attivo": true
+}'>{
+    "nome": "Mario Rossi",
+    "email": "mario@example.com",
+    "eta": 30,
+    "attivo": true
+}</textarea>
+            </div>
+            
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="sendRequest()">
+                    🚀 Invia Richiesta
+                </button>
+                <button class="btn btn-info" onclick="loadAllUsers()">
+                    🔄 Carica Tutti gli Utenti
+                </button>
+                <button class="btn btn-warning" onclick="clearResponse()">
+                    🗑️ Pulisci Risposta
+                </button>
+            </div>
         </div>
         
-        <div class="form-group">
-            <label>Formato risposta:</label>
-            <select id="responseFormat">
-                <option value="json">JSON</option>
-                <option value="xml">XML</option>
-            </select>
+        <div class="panel">
+            <h2>📊 Lista Utenti</h2>
+            <div id="usersList" class="table-container">
+                <p>Caricamento utenti...</p>
+            </div>
         </div>
         
-        <div class="form-group">
-            <label>ID (per GET/PUT/DELETE):</label>
-            <input type="number" id="itemId" placeholder="ID elemento">
+        <div class="panel">
+            <h2>📤 Risposta del Server</h2>
+            <div id="responseHeader"></div>
+            <pre id="response">Nessuna richiesta effettuata</pre>
         </div>
-        
-        <div class="form-group">
-            <label>Dati (JSON o XML):</label><br>
-            <textarea id="dataInput" rows="5" cols="50">{"nome":"Mario","cognome":"Rossi","eta":30}</textarea>
-        </div>
-        
-        <div>
-            <button onclick="sendRequest('GET')">GET (tutti)</button>
-            <button onclick="sendRequest('GET', true)">GET (singolo)</button>
-            <button onclick="sendRequest('POST')">POST (crea)</button>
-            <button onclick="sendRequest('PUT')">PUT (aggiorna)</button>
-            <button onclick="sendRequest('DELETE')">DELETE</button>
-            <button onclick="loadAll()">Carica lista</button>
-        </div>
-        
-        <div id="result"></div>
-        
-        <div id="itemsList"></div>
     </div>
 
     <script>
-    function sendRequest(method, useId = false) {
-        const requestFormat = document.getElementById('requestFormat').value;
-        const responseFormat = document.getElementById('responseFormat').value;
-        const id = document.getElementById('itemId').value;
-        const dataInput = document.getElementById('dataInput').value;
+        const API_BASE = '/api/users';
         
-        let url = 'index.php';
-        if (useId && id) {
-            url += '/' + id;
-        } else if (method === 'PUT' || method === 'DELETE') {
-            url += '/' + id;
-        }
-        
-        const xhr = new XMLHttpRequest();
-        xhr.open(method, url, true);
-        
-        // Set headers
-        xhr.setRequestHeader('Content-Type', 'application/' + requestFormat);
-        xhr.setRequestHeader('Accept', 'application/' + responseFormat);
-        
-        xhr.onload = function() {
-            let result = '';
+        async function sendRequest() {
+            const method = document.getElementById('method').value;
+            const resourceId = document.getElementById('resourceId').value;
+            const requestFormat = document.getElementById('requestFormat').value;
+            const responseFormat = document.getElementById('responseFormat').value;
+            const requestData = document.getElementById('requestData').value;
             
-            // Formatta il risultato in base al formato di risposta
-            if (responseFormat === 'json') {
-                try {
-                    const data = JSON.parse(this.responseText);
-                    result = JSON.stringify(data, null, 2);
-                } catch(e) {
-                    result = this.responseText;
+            let url = API_BASE;
+            let httpMethod = method;
+            let body = null;
+            
+            // Gestione GET con ID
+            if (method === 'GET_ONE') {
+                httpMethod = 'GET';
+                if (resourceId) {
+                    url += '/' + resourceId;
                 }
-            } else {
-                // Per XML, mostriamo direttamente
-                result = this.responseText;
-            }
-            
-            document.getElementById('result').innerHTML = 
-                `<h3>Risposta (${method}):</h3>
-                 <pre>${result}</pre>`;
-            
-            if (method === 'GET') {
-                loadAll(); // Ricarica la lista dopo GET
-            }
-        };
-        
-        // Per GET e DELETE non inviamo body
-        if (method === 'POST' || method === 'PUT') {
-            xhr.send(dataInput);
-        } else {
-            xhr.send();
-        }
-    }
-    
-    function loadAll() {
-        const responseFormat = document.getElementById('responseFormat').value;
-        
-        const xhr = new XMLHttpRequest();
-        xhr.open('GET', 'index.php', true);
-        xhr.setRequestHeader('Accept', 'application/' + responseFormat);
-        
-        xhr.onload = function() {
-            let items = [];
-            
-            if (responseFormat === 'json') {
-                try {
-                    items = JSON.parse(this.responseText);
-                } catch(e) {
-                    console.error('Errore parsing JSON');
+            } else if (method === 'PUT' || method === 'PATCH' || method === 'DELETE') {
+                if (resourceId) {
+                    url += '/' + resourceId;
                 }
-            } else {
-                // Per semplicità, mostriamo XML raw
-                document.getElementById('itemsList').innerHTML = 
-                    '<h3>Lista elementi (XML):</h3><pre>' + this.responseText + '</pre>';
-                return;
             }
             
-            if (items.length === 0) {
-                document.getElementById('itemsList').innerHTML = '<p>Nessun elemento trovato</p>';
-                return;
+            // Prepara headers
+            const headers = {
+                'Accept': responseFormat
+            };
+            
+            // Prepara body per POST, PUT, PATCH
+            if (['POST', 'PUT', 'PATCH'].includes(httpMethod) && requestData) {
+                headers['Content-Type'] = requestFormat;
+                
+                if (requestFormat === 'application/json') {
+                    body = requestData;
+                } else if (requestFormat === 'application/xml') {
+                    body = requestData;
+                } else if (requestFormat === 'application/x-www-form-urlencoded') {
+                    // Converti JSON in form data se necessario
+                    try {
+                        const jsonData = JSON.parse(requestData);
+                        const formData = new URLSearchParams();
+                        for (let key in jsonData) {
+                            formData.append(key, jsonData[key]);
+                        }
+                        body = formData.toString();
+                    } catch {
+                        body = requestData;
+                    }
+                }
             }
             
-            let html = '<h3>Lista elementi:</h3><table><tr>';
+            // Mostra loading
+            document.getElementById('response').textContent = 'Invio richiesta...';
             
-            // Crea intestazioni tabella
-            const headers = Object.keys(items[0]);
-            headers.forEach(header => {
-                html += `<th>${header}</th>`;
-            });
-            html += '<th>Azioni</th></tr>';
-            
-            // Crea righe tabella
-            items.forEach(item => {
-                html += '<tr>';
-                headers.forEach(header => {
-                    html += `<td>${item[header]}</td>`;
-                });
-                html += `<td class="actions">
-                    <button onclick="editItem(${item.id})">Modifica</button>
-                    <button onclick="deleteItem(${item.id})">Elimina</button>
-                </td></tr>`;
-            });
-            
-            html += '</table>';
-            document.getElementById('itemsList').innerHTML = html;
-        };
-        
-        xhr.send();
-    }
-    
-    function editItem(id) {
-        document.getElementById('itemId').value = id;
-        
-        // Carica i dati dell'elemento
-        const xhr = new XMLHttpRequest();
-        xhr.open('GET', 'index.php/' + id, true);
-        xhr.setRequestHeader('Accept', 'application/json');
-        
-        xhr.onload = function() {
             try {
-                const item = JSON.parse(this.responseText);
-                // Prepara i dati per la modifica (rimuovi id)
-                delete item.id;
-                document.getElementById('dataInput').value = JSON.stringify(item, null, 2);
-            } catch(e) {
-                console.error('Errore nel caricamento dell\'elemento');
+                const startTime = performance.now();
+                
+                const response = await fetch(url, {
+                    method: httpMethod,
+                    headers: headers,
+                    body: body
+                });
+                
+                const endTime = performance.now();
+                const responseTime = (endTime - startTime).toFixed(2);
+                
+                // Leggi la risposta
+                let responseData;
+                const contentType = response.headers.get('content-type');
+                
+                if (contentType && contentType.includes('application/json')) {
+                    responseData = await response.json();
+                    responseData = JSON.stringify(responseData, null, 2);
+                } else {
+                    responseData = await response.text();
+                }
+                
+                // Mostra header della risposta
+                const statusClass = getStatusClass(response.status);
+                const headerHtml = `
+                    <div style="margin-bottom: 1rem;">
+                        <span class="badge ${statusClass}">Status: ${response.status} ${response.statusText}</span>
+                        <span class="badge">Tempo: ${responseTime}ms</span>
+                    </div>
+                `;
+                document.getElementById('responseHeader').innerHTML = headerHtml;
+                
+                // Mostra risposta
+                document.getElementById('response').textContent = responseData;
+                
+                // Ricarica la lista se necessario
+                if (httpMethod !== 'GET' || method === 'GET_ONE') {
+                    loadAllUsers();
+                }
+                
+            } catch (error) {
+                document.getElementById('responseHeader').innerHTML = `
+                    <div style="margin-bottom: 1rem;">
+                        <span class="badge badge-danger">Errore</span>
+                    </div>
+                `;
+                document.getElementById('response').textContent = 'Errore: ' + error.message;
             }
-        };
-        
-        xhr.send();
-    }
-    
-    function deleteItem(id) {
-        if (confirm('Sei sicuro di voler eliminare questo elemento?')) {
-            document.getElementById('itemId').value = id;
-            sendRequest('DELETE');
         }
-    }
-    
-    // Carica la lista all'avvio
-    loadAll();
+        
+        function getStatusClass(status) {
+            if (status >= 200 && status < 300) return 'badge-success';
+            if (status >= 400 && status < 500) return 'badge-danger';
+            if (status >= 500) return 'badge-warning';
+            return '';
+        }
+        
+        async function loadAllUsers() {
+            const usersList = document.getElementById('usersList');
+            usersList.innerHTML = '<p>Caricamento utenti...</p>';
+            
+            try {
+                const response = await fetch(API_BASE, {
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Errore nel caricamento');
+                }
+                
+                const data = await response.json();
+                const users = data.data || [];
+                
+                if (users.length === 0) {
+                    usersList.innerHTML = '<p>Nessun utente trovato</p>';
+                    return;
+                }
+                
+                let html = '<table><thead><tr><th>ID</th><th>Nome</th><th>Email</th><th>Età</th><th>Stato</th><th>Azioni</th></tr></thead><tbody>';
+                
+                users.forEach(user => {
+                    const attivoClass = user.attivo ? 'badge-success' : 'badge-danger';
+                    const attivoText = user.attivo ? 'Attivo' : 'Inattivo';
+                    
+                    html += `
+                        <tr>
+                            <td>${user.id}</td>
+                            <td>${user.nome || ''}</td>
+                            <td>${user.email || ''}</td>
+                            <td>${user.eta || ''}</td>
+                            <td><span class="badge ${attivoClass}">${attivoText}</span></td>
+                            <td class="action-btns">
+                                <button class="btn btn-info btn-small" onclick="viewUser(${user.id})">👁️</button>
+                                <button class="btn btn-warning btn-small" onclick="editUser(${user.id})">✏️</button>
+                                <button class="btn btn-danger btn-small" onclick="deleteUser(${user.id})">🗑️</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                html += '</tbody></table>';
+                usersList.innerHTML = html;
+                
+            } catch (error) {
+                usersList.innerHTML = '<p>Errore nel caricamento degli utenti</p>';
+            }
+        }
+        
+        async function viewUser(id) {
+            document.getElementById('method').value = 'GET_ONE';
+            document.getElementById('resourceId').value = id;
+            document.getElementById('responseFormat').value = 'application/json';
+            await sendRequest();
+        }
+        
+        async function editUser(id) {
+            try {
+                const response = await fetch(`${API_BASE}/${id}`, {
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                const user = data.data || data;
+                
+                // Rimuovi campi automatici per la modifica
+                delete user.id;
+                delete user.created_at;
+                delete user.updated_at;
+                
+                document.getElementById('method').value = 'PUT';
+                document.getElementById('resourceId').value = id;
+                document.getElementById('requestFormat').value = 'application/json';
+                document.getElementById('requestData').value = JSON.stringify(user, null, 2);
+                
+            } catch (error) {
+                alert('Errore nel caricamento dei dati utente');
+            }
+        }
+        
+        async function deleteUser(id) {
+            if (confirm('Sei sicuro di voler eliminare questo utente?')) {
+                document.getElementById('method').value = 'DELETE';
+                document.getElementById('resourceId').value = id;
+                await sendRequest();
+            }
+        }
+        
+        function clearResponse() {
+            document.getElementById('responseHeader').innerHTML = '';
+            document.getElementById('response').textContent = 'Nessuna richiesta effettuata';
+        }
+        
+        // Carica utenti all'avvio
+        loadAllUsers();
+        
+        // Aggiorna UI in base al metodo selezionato
+        document.getElementById('method').addEventListener('change', function() {
+            const resourceIdGroup = document.getElementById('resourceId').parentNode;
+            const requestDataGroup = document.getElementById('requestData').parentNode;
+            
+            if (this.value === 'GET' || this.value === 'GET_ONE') {
+                requestDataGroup.style.opacity = '0.5';
+                document.getElementById('requestData').disabled = true;
+            } else {
+                requestDataGroup.style.opacity = '1';
+                document.getElementById('requestData').disabled = false;
+            }
+            
+            if (this.value === 'GET') {
+                resourceIdGroup.style.opacity = '0.5';
+                document.getElementById('resourceId').disabled = true;
+            } else {
+                resourceIdGroup.style.opacity = '1';
+                document.getElementById('resourceId').disabled = false;
+            }
+        });
+        
+        // Trigger iniziale
+        document.getElementById('method').dispatchEvent(new Event('change'));
     </script>
 </body>
 </html>
